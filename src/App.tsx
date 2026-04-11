@@ -174,11 +174,11 @@ export default function App() {
     <div className="min-h-screen bg-[#030712] text-slate-100 pb-40 touch-pan-y antialiased font-sans">
       
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#1a2b4b] border-b border-white/5 px-4 py-4 shadow-xl">
+      <header className="sticky top-0 z-50 bg-[#1a2b4b] border-b border-white/5 px-4 py-2 shadow-xl">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <img src="/logo.png" alt="FC Logo" className="h-8 w-auto" />
-             <h1 className="text-xl font-black italic tracking-tighter">
+          <div className="flex items-center gap-2">
+             <img src="/logo.png" alt="FC Logo" className="h-6 w-auto" />
+             <h1 className="text-lg font-black italic tracking-tighter leading-none">
                 <span className="text-white">FC</span> <span className="text-[#009ee3]">ELÉTRICA</span>
              </h1>
           </div>
@@ -186,16 +186,16 @@ export default function App() {
           <div className="flex gap-2">
             {view === 'editor' ? (
               <>
-                <button onClick={() => { setView('history'); fetchHistory(); }} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
-                  <Clock size={18} />
+                <button onClick={() => { setView('history'); fetchHistory(); }} className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
+                  <Clock size={16} />
                 </button>
-                <button onClick={handleClear} className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
-                  <RefreshCw size={18} />
+                <button onClick={handleClear} className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-slate-400">
+                  <RefreshCw size={16} />
                 </button>
               </>
             ) : (
-              <button onClick={() => setView('editor')} className="px-4 bg-white/5 rounded-full flex items-center gap-2 text-sm font-bold">
-                 <ChevronLeft size={16}/> Voltar
+              <button onClick={() => setView('editor')} className="px-3 h-8 bg-white/5 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase transition-all">
+                 <ChevronLeft size={14}/> Voltar
               </button>
             )}
           </div>
