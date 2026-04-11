@@ -20,6 +20,7 @@ const COLORS = {
 };
 
 const MARGINS = { left: 14, right: 196 };
+const HEADER_H = 28;
 
 const loadLogo = (): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -30,18 +31,15 @@ const loadLogo = (): Promise<HTMLImageElement> => {
   });
 };
 
-// Altura reduzida do cabeçalho de 40 para 28
-const HEADER_H = 28;
-
 const drawHeader = async (doc: jsPDF, title: string, rightText: string) => {
   doc.setFillColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
   doc.rect(0, 0, 210, HEADER_H, 'F');
   doc.setFillColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
-  doc.rect(0, HEADER_H, 210, 2, 'F'); // Linha gold mais fina
+  doc.rect(0, HEADER_H, 210, 2, 'F');
 
   try {
     const logo = await loadLogo();
-    const imgH = 18; // Reduzido para caber na faixa menor
+    const imgH = 18;
     const imgW = (logo.width / logo.height) * imgH;
     const logoY = (HEADER_H - imgH) / 2;
     doc.addImage(logo, 'PNG', MARGINS.left, logoY, imgW, imgH);
@@ -86,11 +84,38 @@ const drawFooter = (doc: jsPDF, footerText: string) => {
   doc.text('FC ELÉTRICA — SEGURANÇA E AUTORIDADE EM ENGENHARIA ELÉTRICA', 105, pageHeight - 3, { align: 'center' });
 };
 
+const handlePdfOutput = async (doc: jsPDF, filename: string) => {
+  const blob = doc.output('blob');
+  const file = new File([blob], filename, { type: 'application/pdf' });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: filename,
+        text: 'Orçamento enviado via sistema FC Elétrica'
+      });
+      return;
+    } catch (err) {
+      console.log('Share error:', err);
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+};
+
 export const generateCommercialPDF = async (data: BudgetData) => {
   const doc = new jsPDF() as jsPDFWithAutoTable;
   await drawHeader(doc, 'Orçamento Comercial', `VALIDADE: ${data.validityDays} DIAS`);
 
-  let currentY = 45; // Começa mais cedo por causa do header menor
+  let currentY = 45; 
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
   doc.text(`CLIENTE: ${data.clientName}`, MARGINS.left, currentY);
@@ -107,36 +132,29 @@ export const generateCommercialPDF = async (data: BudgetData) => {
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
   
-  // Lista bullet compacta
   data.items.forEach(item => {
     const splitDesc = doc.splitTextToSize(`• ${item.description}`, MARGINS.right - MARGINS.left);
-    doc.text(splitDesc, MARGINS.left, currentY);
-    currentY += (splitDesc.length * 5) + 2;
-    
-    // Check para nova página se necessário
-    if (currentY > 240) {
+    if (currentY + (splitDesc.length * 5) > 260) {
       doc.addPage();
       currentY = 20;
     }
+    doc.text(splitDesc, MARGINS.left, currentY);
+    currentY += (splitDesc.length * 5) + 2;
   });
 
   currentY += 10;
-  // Bloco de Total Compacto e Elegante
-  const totalBoxW = 80;
+  if (currentY > 260) { doc.addPage(); currentY = 20; }
+
+  const totalBoxW = 75;
   const totalBoxH = 10;
   const totalBoxX = MARGINS.right - totalBoxW;
-  
   doc.setFillColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
   doc.rect(totalBoxX, currentY, totalBoxW, totalBoxH, 'F');
-  
-  // Detalhe Gold lateral
   doc.setFillColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
   doc.rect(totalBoxX, currentY, 2, totalBoxH, 'F');
-
   doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
   doc.text('TOTAL DO INVESTIMENTO:', totalBoxX + 6, currentY + 6.5);
-  
   const total = data.items.reduce((acc, i) => acc + i.total, 0);
   doc.setTextColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
@@ -144,6 +162,7 @@ export const generateCommercialPDF = async (data: BudgetData) => {
 
   if (data.observations) {
     currentY += 20;
+    if (currentY > 260) { doc.addPage(); currentY = 20; }
     doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
     doc.setFontSize(9); doc.text('OBSERVAÇÕES ADICIONAIS', MARGINS.left, currentY);
     currentY += 5;
@@ -160,7 +179,8 @@ export const generateCommercialPDF = async (data: BudgetData) => {
   doc.text('ACEITE DO CLIENTE', 105, sigY + 4, { align: 'center' });
 
   drawFooter(doc, 'ORÇAMENTO COMERCIAL SUJEITORA A ALTERAÇÕES CASO HAJA MUDANÇA NO ESCOPO.');
-  doc.save(`Orcamento_${data.clientName.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyy')}.pdf`);
+  const fileName = `Orcamento_FC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
+  await handlePdfOutput(doc, fileName);
 };
 
 export const generateMaterialListPDF = async (data: BudgetData) => {
@@ -176,11 +196,11 @@ export const generateMaterialListPDF = async (data: BudgetData) => {
 
   let currentY = 40;
   Object.keys(groups).forEach(cat => {
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
     doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
     doc.text(cat.toUpperCase(), MARGINS.left, currentY);
     currentY += 3;
-
     autoTable(doc, {
       startY: currentY,
       head: [['#', 'Descrição do Material', 'Unid.', 'Qtd.']],
@@ -200,7 +220,8 @@ export const generateMaterialListPDF = async (data: BudgetData) => {
   });
 
   drawFooter(doc, 'AS ESPECIFICAÇÕES DEVEM SER SEGUIDAS PARA GARANTIR O PADRÃO DE QUALIDADE DO SERVIÇO.');
-  doc.save(`Lista_Materiais_${data.clientName.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyy')}.pdf`);
+  const fileName = `Lista_Materiais_FC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
+  await handlePdfOutput(doc, fileName);
 };
 
 export const generateAllPDFs = async (data: BudgetData) => {
