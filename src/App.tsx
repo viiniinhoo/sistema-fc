@@ -327,7 +327,7 @@ export default function App() {
                  <button 
                     onClick={handleSave} 
                     disabled={isLoading}
-                    className="h-10 px-6 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase rounded-xl flex items-center gap-2 transition-all active:scale-95"
+                    className="h-10 px-6 bg-[#009ee3] hover:bg-blue-400 text-white font-black text-[10px] uppercase rounded-xl flex items-center gap-2 transition-all active:scale-95"
                  >
                     {isLoading ? <RefreshCw className="animate-spin" size={16}/> : <Save size={16}/>} 
                     {data.id ? 'Atualizar' : 'Salvar'}
@@ -337,7 +337,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3">
                  <button 
                     onClick={() => handleGenerate('commercial')} 
-                    className="h-12 bg-slate-100 hover:bg-white text-[#1a2b4b] rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-lg transition-all active:scale-95"
+                    className="h-12 bg-[#1a2b4b] hover:bg-[#243c66] text-white border border-white/10 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-lg transition-all active:scale-95"
                  >
                     {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={16}/> : <><Download size={16}/> PDF COMERCIAL</>}
                  </button>
