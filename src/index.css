@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: oklch(0.72 0.15 230);
+  --color-brand-accent: oklch(0.78 0.16 85);
+  --color-brand-bg: #030712;
+  --color-brand-surface: #111827;
+  
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Open Sans", sans-serif;
+
+  --animate-pulse-slow: pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap');
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-brand-bg);
+    color: #f1f5f9;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(0, 114, 206, 0.05) 0px, transparent 50%), 
+      radial-gradient(at 100% 0%, rgba(234, 179, 8, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-input {
+    background: rgba(10, 15, 30, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-input:focus {
+    background: rgba(10, 15, 30, 0.8);
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 15px -5px rgba(0, 114, 206, 0.4);
+    outline: none;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .border-glow-blue {
+    box-shadow: 0 0 20px -5px rgba(0, 157, 224, 0.5);
+  }
+}
