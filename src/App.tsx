@@ -314,33 +314,38 @@ export default function App() {
       )}
 
       {view === 'editor' && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-[#030712]/90 backdrop-blur-2xl border-t border-white/5">
-           <div className="max-w-6xl mx-auto flex flex-col gap-2">
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-[#1a2b4b]/95 backdrop-blur-2xl border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+           <div className="max-w-6xl mx-auto space-y-3">
               
-              <div className="flex gap-2">
-                 <div className="flex-1 bg-white/5 p-2 px-4 rounded-xl flex items-center justify-between border border-white/5 shadow-inner">
-                    <span className="text-[8px] font-black text-slate-500 uppercase">Investimento</span>
-                    <span className="text-lg font-black text-white">{totalItemsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              <div className="flex items-center justify-between px-2">
+                 <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Investimento Total</span>
+                    <span className="text-xl font-black text-white tabular-nums">
+                       {totalItemsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
                  </div>
                  <button 
                     onClick={handleSave} 
                     disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-black text-[9px] uppercase px-6 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+                    className="h-10 px-6 bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase rounded-xl flex items-center gap-2 transition-all active:scale-95"
                  >
                     {isLoading ? <RefreshCw className="animate-spin" size={16}/> : <Save size={16}/>} 
                     {data.id ? 'Atualizar' : 'Salvar'}
                  </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                 <button onClick={() => handleGenerate('commercial')} className="h-11 bg-slate-800 rounded-xl flex items-center justify-center gap-2 text-[8px] font-black uppercase text-slate-300">
-                    {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={14}/> : 'Comercial'}
+              <div className="grid grid-cols-2 gap-3">
+                 <button 
+                    onClick={() => handleGenerate('commercial')} 
+                    className="h-12 bg-slate-100 hover:bg-white text-[#1a2b4b] rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-lg transition-all active:scale-95"
+                 >
+                    {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={16}/> : <><Download size={16}/> PDF COMERCIAL</>}
                  </button>
-                 <button onClick={() => handleGenerate('materials')} className="h-11 bg-slate-800 rounded-xl flex items-center justify-center gap-2 text-[8px] font-black uppercase text-slate-300">
-                    {isGenerating === 'materials' ? <RefreshCw className="animate-spin" size={14}/> : 'Materiais'}
-                 </button>
-                 <button onClick={() => handleGenerate('all')} className="h-11 bg-amber-600 rounded-xl flex items-center justify-center gap-2 text-[8px] font-black uppercase text-white shadow-lg">
-                    {isGenerating === 'all' ? <RefreshCw className="animate-spin" size={14}/> : <><Download size={14}/> Ambos</>}
+                 <button 
+                    onClick={() => handleGenerate('materials')} 
+                    className="h-12 bg-[#009ee3] hover:bg-blue-400 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-lg transition-all active:scale-95"
+                 >
+                    {isGenerating === 'materials' ? <RefreshCw className="animate-spin" size={16}/> : <><Download size={16}/> PDF MATERIAIS</>}
                  </button>
               </div>
            </div>
