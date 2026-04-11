@@ -117,57 +117,57 @@ export const generateCommercialPDF = async (data: BudgetData) => {
 
   let currentY = 45; 
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
   doc.text(`CLIENTE: ${data.clientName}`, MARGINS.left, currentY);
-  currentY += 5;
+  currentY += 6;
   doc.text(`ENDEREÇO: ${data.workAddress}`, MARGINS.left, currentY);
   currentY += 12;
 
   doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.text('DESCRIÇÃO DAS ATIVIDADES / SERVIÇOS', MARGINS.left, currentY);
   doc.line(MARGINS.left, currentY + 1.5, MARGINS.right, currentY + 1.5);
-  currentY += 8;
+  currentY += 10;
 
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
   
   data.items.forEach(item => {
     const splitDesc = doc.splitTextToSize(`• ${item.description}`, MARGINS.right - MARGINS.left);
-    if (currentY + (splitDesc.length * 5) > 260) {
+    if (currentY + (splitDesc.length * 6) > 260) {
       doc.addPage();
       currentY = 20;
     }
     doc.text(splitDesc, MARGINS.left, currentY);
-    currentY += (splitDesc.length * 5) + 2;
+    currentY += (splitDesc.length * 6) + 2;
   });
 
   currentY += 10;
-  if (currentY > 260) { doc.addPage(); currentY = 20; }
+  if (currentY > 250) { doc.addPage(); currentY = 20; }
 
-  const totalBoxW = 75;
-  const totalBoxH = 10;
+  const totalBoxW = 85;
+  const totalBoxH = 12;
   const totalBoxX = MARGINS.right - totalBoxW;
   doc.setFillColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
   doc.rect(totalBoxX, currentY, totalBoxW, totalBoxH, 'F');
   doc.setFillColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
   doc.rect(totalBoxX, currentY, 2, totalBoxH, 'F');
   doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5);
-  doc.text('TOTAL DO INVESTIMENTO:', totalBoxX + 6, currentY + 6.5);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+  doc.text('TOTAL DO INVESTIMENTO:', totalBoxX + 6, currentY + 7.5);
   const total = data.items.reduce((acc, i) => acc + i.total, 0);
   doc.setTextColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-  doc.text(total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), MARGINS.right - 4, currentY + 6.8, { align: 'right' });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
+  doc.text(total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), MARGINS.right - 4, currentY + 7.8, { align: 'right' });
 
   if (data.observations) {
     currentY += 20;
-    if (currentY > 260) { doc.addPage(); currentY = 20; }
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
     doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
-    doc.setFontSize(9); doc.text('OBSERVAÇÕES ADICIONAIS', MARGINS.left, currentY);
-    currentY += 5;
+    doc.setFontSize(10); doc.text('OBSERVAÇÕES ADICIONAIS', MARGINS.left, currentY);
+    currentY += 6;
     doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
     const splitObs = doc.splitTextToSize(data.observations, MARGINS.right - MARGINS.left);
     doc.text(splitObs, MARGINS.left, currentY);
   }
@@ -198,9 +198,9 @@ export const generateMaterialListPDF = async (data: BudgetData) => {
   Object.keys(groups).forEach(cat => {
     if (currentY > 250) { doc.addPage(); currentY = 20; }
     doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
     doc.text(cat.toUpperCase(), MARGINS.left, currentY);
-    currentY += 3;
+    currentY += 4;
     autoTable(doc, {
       startY: currentY,
       head: [['#', 'Descrição do Material', 'Unid.', 'Qtd.']],
@@ -211,9 +211,9 @@ export const generateMaterialListPDF = async (data: BudgetData) => {
         item.quantity.toString()
       ]),
       theme: 'grid',
-      headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontSize: 8 },
-      columnStyles: { 0: { cellWidth: 10 }, 2: { cellWidth: 15 }, 3: { cellWidth: 15, halign: 'center' } },
-      styles: { fontSize: 8, cellPadding: 1.5 },
+      headStyles: { fillColor: COLORS.navy, textColor: COLORS.white, fontSize: 9 },
+      columnStyles: { 0: { cellWidth: 10 }, 2: { cellWidth: 18 }, 3: { cellWidth: 18, halign: 'center' } },
+      styles: { fontSize: 9, cellPadding: 2 },
       margin: { left: MARGINS.left, right: 14 }
     });
     currentY = doc.lastAutoTable.finalY + 8;
