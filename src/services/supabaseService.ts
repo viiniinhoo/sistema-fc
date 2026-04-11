@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { BudgetData, BudgetItem } from '../types';
+import type { BudgetData } from '../types';
 
 export const saveBudget = async (data: BudgetData, totalValue: number) => {
   // 1. Inserir ou atualizar orçamento principal
