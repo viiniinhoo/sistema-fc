@@ -43,14 +43,14 @@ const drawHeader = async (doc: jsPDF, title: string, rightText: string) => {
     const imgW = (logo.width / logo.height) * imgH;
     const logoY = (HEADER_H - imgH) / 2;
     doc.addImage(logo, 'PNG', MARGINS.left, logoY, imgW, imgH);
-    
+
     const textStart = MARGINS.left + imgW + 5;
     const textYLine1 = logoY + 8;
-    
+
     doc.setTextColor(COLORS.skyBlue[0], COLORS.skyBlue[1], COLORS.skyBlue[2]);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-    doc.text('FC ELÉTRICA', textStart, textYLine1);
-    
+    doc.text('LVC ELÉTRICA', textStart, textYLine1);
+
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(title.toUpperCase(), textStart, textYLine1 + 5);
@@ -58,7 +58,7 @@ const drawHeader = async (doc: jsPDF, title: string, rightText: string) => {
   } catch {
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
-    doc.text('FC ELÉTRICA', MARGINS.left, 18);
+    doc.text('LVC ELÉTRICA', MARGINS.left, 18);
   }
 
   doc.setTextColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
@@ -81,7 +81,7 @@ const drawFooter = (doc: jsPDF, footerText: string) => {
   doc.setFillColor(COLORS.gold[0], COLORS.gold[1], COLORS.gold[2]);
   doc.rect(0, pageHeight - 8, 210, 8, 'F');
   doc.setTextColor(COLORS.navy[0], COLORS.navy[1], COLORS.navy[2]);
-  doc.text('FC ELÉTRICA — SEGURANÇA E AUTORIDADE EM ENGENHARIA ELÉTRICA', 105, pageHeight - 3, { align: 'center' });
+  doc.text('LVC ELÉTRICA — SEGURANÇA E AUTORIDADE EM ENGENHARIA ELÉTRICA', 105, pageHeight - 3, { align: 'center' });
 };
 
 const handlePdfOutput = async (doc: jsPDF, filename: string) => {
@@ -93,7 +93,7 @@ const handlePdfOutput = async (doc: jsPDF, filename: string) => {
       await navigator.share({
         files: [file],
         title: filename,
-        text: 'Orçamento enviado via sistema FC Elétrica'
+        text: 'Orçamento enviado via sistema LVC Elétrica'
       });
       return;
     } catch (err) {
@@ -115,7 +115,7 @@ export const generateCommercialPDF = async (data: BudgetData) => {
   const doc = new jsPDF() as jsPDFWithAutoTable;
   await drawHeader(doc, 'Orçamento Comercial', `VALIDADE: ${data.validityDays} DIAS`);
 
-  let currentY = 45; 
+  let currentY = 45;
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
   doc.text(`CLIENTE: ${data.clientName}`, MARGINS.left, currentY);
@@ -131,7 +131,7 @@ export const generateCommercialPDF = async (data: BudgetData) => {
 
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
-  
+
   data.items.forEach(item => {
     const splitDesc = doc.splitTextToSize(`• ${item.description}`, MARGINS.right - MARGINS.left);
     if (currentY + (splitDesc.length * 6) > 260) {
@@ -179,7 +179,7 @@ export const generateCommercialPDF = async (data: BudgetData) => {
   doc.text('ACEITE DO CLIENTE', 105, sigY + 4, { align: 'center' });
 
   drawFooter(doc, 'ORÇAMENTO COMERCIAL SUJEITORA A ALTERAÇÕES CASO HAJA MUDANÇA NO ESCOPO.');
-  const fileName = `Orcamento_FC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
+  const fileName = `Orcamento_LVC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
   await handlePdfOutput(doc, fileName);
 };
 
@@ -220,7 +220,7 @@ export const generateMaterialListPDF = async (data: BudgetData) => {
   });
 
   drawFooter(doc, 'AS ESPECIFICAÇÕES DEVEM SER SEGUIDAS PARA GARANTIR O PADRÃO DE QUALIDADE DO SERVIÇO.');
-  const fileName = `Lista_Materiais_FC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
+  const fileName = `Lista_Materiais_LVC_${data.clientName.replace(/\s+/g, '_').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}.pdf`;
   await handlePdfOutput(doc, fileName);
 };
 
