@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 
 export type SyncAction = {
   id: string;
-  type: 'CREATE_CLIENT' | 'CREATE_BUDGET' | 'CREATE_MATERIAL_LIST' | 'UPDATE_BUDGET' | 'DELETE_BUDGET';
+  type: 'CREATE_CLIENT' | 'UPDATE_CLIENT' | 'CREATE_BUDGET' | 'CREATE_MATERIAL_LIST' | 'UPDATE_BUDGET' | 'DELETE_BUDGET';
   payload: any;
   created_at: number;
 };
@@ -35,6 +35,10 @@ export const syncOfflineData = async () => {
         const { error } = await supabase.from('clients').insert(action.payload);
         if (error) throw error;
       }
+      if (action.type === 'UPDATE_CLIENT') {
+        const { error } = await supabase.from('clients').update(action.payload).eq('id', action.payload.id);
+        if (error) throw error;
+      }
       if (action.type === 'CREATE_BUDGET' || action.type === 'UPDATE_BUDGET') {
         // We handle budget saving logic
         const { error } = await supabase.from('budgets').upsert(action.payload);
@@ -58,6 +62,10 @@ export const executeOrQueue = async (action: SyncAction) => {
     try {
       if (action.type === 'CREATE_CLIENT') {
         const { error } = await supabase.from('clients').insert(action.payload);
+        if (error) throw error;
+      }
+      if (action.type === 'UPDATE_CLIENT') {
+        const { error } = await supabase.from('clients').update(action.payload).eq('id', action.payload.id);
         if (error) throw error;
       }
       // Add more direct execution paths as needed

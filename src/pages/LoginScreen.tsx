@@ -34,7 +34,7 @@ export default function LoginScreen() {
           <h1 className="text-2xl font-black italic tracking-tighter text-[#1a2b4b]">
             LVC <span className="text-[#009ee3]">ELÉTRICA</span>
           </h1>
-          <p className="text-slate-500 mt-2 text-sm">Controle de Serviços e Orçamentos</p>
+          <p className="text-slate-400 dark:text-slate-500 mt-2 text-sm">Controle de Serviços e Orçamentos</p>
         </div>
 
         {error && (
@@ -52,7 +52,7 @@ export default function LoginScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
-              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-[16px] outline-none focus:border-[#009ee3] focus:ring-2 focus:ring-[#009ee3]/20 transition-all font-medium"
+              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-[16px] text-slate-900 outline-none focus:border-[#009ee3] focus:ring-2 focus:ring-[#009ee3]/20 transition-all font-medium"
               required
             />
           </div>
@@ -64,7 +64,7 @@ export default function LoginScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Sua senha"
-              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-[16px] outline-none focus:border-[#009ee3] focus:ring-2 focus:ring-[#009ee3]/20 transition-all font-medium"
+              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-[16px] text-slate-900 outline-none focus:border-[#009ee3] focus:ring-2 focus:ring-[#009ee3]/20 transition-all font-medium"
               required
             />
           </div>
@@ -72,7 +72,7 @@ export default function LoginScreen() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-14 bg-[#009ee3] hover:bg-[#007bbf] text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-4 active:scale-[0.98]"
+            className="w-full h-14 bg-[#009ee3] hover:bg-[#007bbf] text-slate-900 dark:text-white rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-4 active:scale-[0.98]"
           >
             {loading ? (
               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -86,7 +86,7 @@ export default function LoginScreen() {
         </form>
       </div>
       
-      <p className="mt-8 text-slate-400 text-sm font-medium">Acesso restrito a colaboradores</p>
+      <p className="mt-8 text-slate-400 dark:text-slate-500 dark:text-slate-400 text-sm font-medium">Acesso restrito a colaboradores</p>
     </div>
   );
 }

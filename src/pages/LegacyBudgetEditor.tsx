@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import CurrencyInput from 'react-currency-input-field';
+import { useParams } from 'react-router-dom';
 import type { BudgetData, BudgetItem } from '../types';
 import { generateCommercialPDF, generateMaterialListPDF, generateAllPDFs } from '../utils/pdfGenerator';
-import { saveBudget } from '../services/supabaseService';
+import { saveBudget, getBudgetById } from '../services/supabaseService';
 import { executeOrQueue } from '../services/offlineSync';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -37,6 +38,7 @@ export default function LegacyBudgetEditor() {
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const { user } = useAuth();
+  const { id } = useParams();
 
   useEffect(() => {
     supabase.from('clients').select('id, name').order('name').then(({data}) => {
@@ -52,13 +54,33 @@ export default function LegacyBudgetEditor() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('@LVCEletrica:current');
-    if (saved) setData(JSON.parse(saved));
-  }, []);
+    if (id) {
+       loadBudget(id);
+    } else {
+      const saved = localStorage.getItem('@LVCEletrica:current');
+      if (saved) setData(JSON.parse(saved));
+    }
+  }, [id]);
+
+  const loadBudget = async (budgetId: string) => {
+    setIsLoading(true);
+    try {
+      const b = await getBudgetById(budgetId);
+      setData(b as any);
+      if ((b as any).client_id) setSelectedClientId((b as any).client_id);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao carregar orçamento.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem('@LVCEletrica:current', JSON.stringify(data));
-  }, [data]);
+    if (!id) {
+      localStorage.setItem('@LVCEletrica:current', JSON.stringify(data));
+    }
+  }, [data, id]);
 
 
   const handleSave = async () => {
@@ -78,7 +100,7 @@ export default function LegacyBudgetEditor() {
       const budgetPayload = { ...data, clientName: finalClientName };
       
       if (navigator.onLine) {
-        const saved = await saveBudget(budgetPayload, totalValue, user?.id, cId);
+        const saved = await saveBudget(budgetPayload, totalValue, user?.id, cId, user?.user_metadata?.name);
         setData({ ...budgetPayload, id: saved.id });
       } else {
          await executeOrQueue({
@@ -164,7 +186,7 @@ export default function LegacyBudgetEditor() {
 
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 pb-10 touch-pan-y antialiased font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 pb-10 touch-pan-y antialiased font-sans">
         <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
           {/* Editor View */}
           <section className="glass-panel p-4 rounded-xl border-l-2 border-l-blue-500">
@@ -215,24 +237,24 @@ export default function LegacyBudgetEditor() {
 
             <div className="space-y-2">
               {data.items.map((item, idx) => (
-                <div key={item.id} className="glass-panel p-3 rounded-xl border border-white/5 bg-slate-900/40">
+                <div key={item.id} className="glass-panel p-3 rounded-xl border border-slate-900/10 dark:border-white/5 bg-slate-100 dark:bg-slate-900/40">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[9px] font-black text-slate-600 uppercase">Item {idx + 1}</span>
                     <button onClick={() => removeItem(item.id)} className="text-red-500/30"><Trash2 size={14} /></button>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
-                    <textarea value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} className="col-span-2 bg-black/40 rounded-lg p-2 text-sm h-12 resize-none" placeholder="Descrição..." />
-                    <select value={item.category} onChange={e => updateItem(item.id, 'category', e.target.value)} className="bg-black/40 rounded-lg p-1.5 text-xs text-slate-300">
+                    <textarea value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} className="col-span-2 bg-slate-200 dark:bg-black/40 rounded-lg p-2 text-sm h-12 resize-none" placeholder="Descrição..." />
+                    <select value={item.category} onChange={e => updateItem(item.id, 'category', e.target.value)} className="bg-slate-200 dark:bg-black/40 rounded-lg p-1.5 text-xs text-slate-600 dark:text-slate-300">
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="bg-black/40 rounded-lg p-1.5 text-xs text-slate-300">
+                    <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="bg-slate-200 dark:bg-black/40 rounded-lg p-1.5 text-xs text-slate-600 dark:text-slate-300">
                       {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
-                    <input type="number" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="w-14 bg-white/5 rounded-lg p-1.5 text-xs text-center font-bold" />
+                    <input type="number" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="w-14 bg-slate-900/5 dark:bg-white/5 rounded-lg p-1.5 text-xs text-center font-bold" />
                     <CurrencyInput value={item.unitPrice} onValueChange={(val) => updateItem(item.id, 'unitPrice', val || 0)} className="flex-1 bg-blue-500/5 rounded-lg p-1.5 text-xs text-right font-bold text-blue-400" />
-                    <div className="w-20 text-right text-xs font-black text-white">
+                    <div className="w-20 text-right text-xs font-black text-slate-900 dark:text-white">
                       {item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </div>
                   </div>
@@ -245,23 +267,23 @@ export default function LegacyBudgetEditor() {
           </section>
 
           <section className="glass-panel p-3 rounded-xl">
-            <textarea value={data.observations} onChange={e => setData({ ...data, observations: e.target.value })} placeholder="Observações..." className="w-full bg-black/20 rounded-lg p-2 text-[10px] text-slate-400 h-16 resize-none" />
+            <textarea value={data.observations} onChange={e => setData({ ...data, observations: e.target.value })} placeholder="Observações..." className="w-full bg-slate-100 dark:bg-black/20 rounded-lg p-2 text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400 h-16 resize-none" />
           </section>
 
           {/* Footer Actions Moved Here */}
-          <div className="p-1.5 bg-[#1a2b4b]/98 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl">
+          <div className="p-1.5 bg-white/98 dark:bg-[#1a2b4b]/98 backdrop-blur-2xl border border-slate-900/15 dark:border-white/10 rounded-2xl shadow-2xl">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between px-2">
                 <div className="flex flex-col">
-                  <span className="text-[6px] font-black text-slate-400 uppercase leading-none">Total</span>
-                  <span className="text-sm font-black text-white tabular-nums leading-none">
+                  <span className="text-[6px] font-black text-slate-400 dark:text-slate-500 dark:text-slate-400 uppercase leading-none">Total</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white tabular-nums leading-none">
                     {totalItemsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                 </div>
                 <button
                   onClick={handleSave}
                   disabled={isLoading}
-                  className="h-8 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[9px] uppercase rounded-md flex items-center gap-2 transition-all active:scale-95"
+                  className="h-8 px-4 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white font-black text-[9px] uppercase rounded-md flex items-center gap-2 transition-all active:scale-95"
                 >
                   {isLoading ? <RefreshCw className="animate-spin" size={12} /> : <Save size={12} />}
                   {data.id ? 'Atualizar' : 'Salvar'}
@@ -271,13 +293,13 @@ export default function LegacyBudgetEditor() {
               <div className="grid grid-cols-2 gap-1.5">
                 <button
                   onClick={() => handleGenerate('commercial')}
-                  className="h-9 bg-[#1a2b4b] hover:bg-[#243c66] text-white border border-white/10 rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
+                  className="h-9 bg-white dark:bg-[#1a2b4b] hover:bg-[#243c66] text-slate-900 dark:text-white border border-slate-900/15 dark:border-white/10 rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
                 >
                   {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={12} /> : <><Download size={12} /> COMERCIAL</>}
                 </button>
                 <button
                   onClick={() => handleGenerate('materials')}
-                  className="h-9 bg-[#009ee3] hover:bg-blue-400 text-white rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
+                  className="h-9 bg-[#009ee3] hover:bg-blue-400 text-slate-900 dark:text-white rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
                 >
                   {isGenerating === 'materials' ? <RefreshCw className="animate-spin" size={12} /> : <><Download size={12} /> MATERIAIS</>}
                 </button>

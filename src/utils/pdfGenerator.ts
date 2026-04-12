@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import type { BudgetData, BudgetItem } from '../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '../lib/supabase';
 
 interface jsPDFWithAutoTable extends jsPDF {
   lastAutoTable: {
@@ -51,10 +52,14 @@ const drawHeader = async (doc: jsPDF, title: string, rightText: string) => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
     doc.text('LVC ELÉTRICA', textStart, textYLine1);
 
+    const { data: { user } } = await supabase.auth.getUser();
+    const userName = user?.user_metadata?.name || 'Instalações e Manutenções';
+    const userPhone = user?.user_metadata?.phone || 'Elétricas';
+
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(title.toUpperCase(), textStart, textYLine1 + 5);
-    doc.text('Instalações e Manutenções Elétricas', textStart, textYLine1 + 9);
+    doc.text(`${userName} - ${userPhone}`, textStart, textYLine1 + 9);
   } catch {
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
@@ -87,8 +92,9 @@ const drawFooter = (doc: jsPDF, footerText: string) => {
 const handlePdfOutput = async (doc: jsPDF, filename: string) => {
   const blob = doc.output('blob');
   const file = new File([blob], filename, { type: 'application/pdf' });
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  if (isMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
         files: [file],

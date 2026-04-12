@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { BudgetData } from '../types';
 
-export const saveBudget = async (data: BudgetData, totalValue: number, userId?: string, clientId?: string) => {
+export const saveBudget = async (data: BudgetData, totalValue: number, userId?: string, clientId?: string, creatorName?: string) => {
   // 1. Inserir ou atualizar orçamento principal
   const { data: budget, error: budgetError } = await supabase
     .from('budgets')
@@ -15,6 +15,7 @@ export const saveBudget = async (data: BudgetData, totalValue: number, userId?: 
       total_value: totalValue,
       client_id: clientId || null,
       user_id: userId || null,
+      created_by: creatorName || null,
       updated_at: new Date().toISOString()
     })
     .select()

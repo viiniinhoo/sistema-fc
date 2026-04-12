@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Home, FileText, Package, Users, LogOut, WifiOff, Wifi } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
+import { Home, FileText, Package, Users, LogOut, WifiOff, Wifi, Sun, Moon, User } from 'lucide-react';
 
 export default function MobileShell() {
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
@@ -36,10 +38,10 @@ export default function MobileShell() {
   ];
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#030712] text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 overflow-hidden">
       
       {/* Top Header */}
-      <header className="shrink-0 bg-[#1a2b4b] border-b border-white/5 px-4 h-14 flex items-center justify-between shadow-md z-10">
+      <header className="shrink-0 bg-[#1a2b4b] border-b border-slate-900/10 dark:border-white/5 px-4 h-14 flex items-center justify-between shadow-md z-10">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="LVC Logo" className="h-6 w-auto" />
           <h1 className="text-lg font-black italic tracking-tighter leading-none">
@@ -60,6 +62,20 @@ export default function MobileShell() {
           </div>
           
           <button 
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-amber-500 transition-colors"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          <button 
+            onClick={() => navigate('/perfil')}
+            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-blue-400 transition-colors"
+          >
+            <User size={16} />
+          </button>
+          
+          <button 
             onClick={handleSignOut} 
             className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
           >
@@ -74,7 +90,7 @@ export default function MobileShell() {
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-white/10 flex justify-around items-end h-16 pb-2 pt-1 px-2 z-50">
+      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-slate-900/15 dark:border-white/10 flex justify-around items-end h-16 pb-2 pt-1 px-2 z-50">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
