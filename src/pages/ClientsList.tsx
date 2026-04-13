@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { UserPlus, Phone, MapPin, ChevronRight, Search } from 'lucide-react';
+import { UserPlus, Phone, MapPin, ChevronRight, Search, Trash2 } from 'lucide-react';
 import { executeOrQueue } from '../services/offlineSync';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -33,6 +33,29 @@ export default function ClientsList() {
     }
   };
 
+  const formatWhatsApp = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 7) return `${numbers.slice(0, 2)} ${numbers.slice(2)}`;
+    return `${numbers.slice(0, 2)} ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
+
+  const handleDeleteClient = async () => {
+    if (!currentClient.id) return;
+    if (!window.confirm(`Tem certeza que deseja excluir o cliente "${currentClient.name}"?\nIsso não removerá os orçamentos já criados.`)) return;
+
+    try {
+      const { error } = await supabase.from('clients').delete().eq('id', currentClient.id);
+      if (error) throw error;
+      
+      setIsModalOpen(false);
+      fetchClients();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Erro ao excluir cliente. Verifique se existem dependências.");
+    }
+  };
+
   const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentClient.name) return;
@@ -52,7 +75,7 @@ export default function ClientsList() {
     });
 
     setIsModalOpen(false);
-    setCurrentClient({ name: '', phone: '', address: '', email: '' });
+    setCurrentClient({ name: '', phone: '', address: '' });
     fetchClients();
   };
 
@@ -152,7 +175,17 @@ export default function ClientsList() {
               <h3 className="text-xl font-black text-amber-500">
                 {currentClient.id ? 'Editar Cliente' : 'Novo Cliente'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/10 dark:bg-white/10 text-slate-900 dark:text-white font-bold">✕</button>
+              <div className="flex items-center gap-2">
+                {currentClient.id && (
+                  <button 
+                    onClick={handleDeleteClient}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-900/10 dark:bg-white/10 text-slate-900 dark:text-white font-bold">✕</button>
+              </div>
             </div>
 
             <form onSubmit={handleSaveClient} className="space-y-4">
@@ -173,9 +206,10 @@ export default function ClientsList() {
                 <input
                   type="tel"
                   value={currentClient.phone}
-                  onChange={e => setCurrentClient({ ...currentClient, phone: e.target.value })}
+                  onChange={e => setCurrentClient({ ...currentClient, phone: formatWhatsApp(e.target.value) })}
+                  maxLength={13}
                   className="w-full h-14 bg-white dark:bg-[#1a2b4b] border border-slate-900/10 dark:border-white/5 rounded-xl px-4 text-[16px] text-slate-900 dark:text-white outline-none focus:border-amber-500/50"
-                  placeholder="(00) 00000-0000"
+                  placeholder="21 90000-0000"
                 />
               </div>
 

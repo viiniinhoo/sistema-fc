@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = ['Elétrica', 'Hidráulica', 'Infraestrutura', 'Acabamento', 'Geral'];
-const UNITS = ['un', 'm', 'pç', 'cx', 'kit', 'm²', 'm³'];
+const UNITS = ['un', 'm', 'pç', 'cx', 'kit', 'm²'];
 
 const INITIAL_DATA: BudgetData = {
   clientName: '',
@@ -37,17 +37,22 @@ export default function LegacyBudgetEditor() {
   const [isGenerating, setIsGenerating] = useState<'commercial' | 'materials' | 'all' | null>(null);
   const [clients, setClients] = useState<any[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [isAddingClient, setIsAddingClient] = useState(false);
+  const [newClient, setNewClient] = useState({ name: '', phone: '', address: '' });
   const { user } = useAuth();
   const { id } = useParams();
 
+  const fetchClients = async () => {
+    const { data: d } = await supabase.from('clients').select('id, name').order('name');
+    if (d) setClients(d);
+  };
+
   useEffect(() => {
-    supabase.from('clients').select('id, name').order('name').then(({data}) => {
-      if (data) setClients(data);
-    });
+    fetchClients();
   }, []);
 
   const formatWhatsApp = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    const numbers = value.replace(/\D/g, '').slice(0, 11);
     if (numbers.length <= 2) return numbers;
     if (numbers.length <= 7) return `${numbers.slice(0, 2)} ${numbers.slice(2)}`;
     return `${numbers.slice(0, 2)} ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
@@ -130,7 +135,36 @@ export default function LegacyBudgetEditor() {
     }
   };
 
+  const handleQuickAddClient = async () => {
+    if (!newClient.name) return alert("Informe o nome do cliente.");
+    setIsLoading(true);
+    try {
+      const { data: savedClient, error } = await supabase
+        .from('clients')
+        .insert({
+          name: newClient.name,
+          phone: newClient.phone,
+          address: newClient.address,
+          user_id: user?.id
+        })
+        .select()
+        .single();
 
+      if (error) throw error;
+
+      await fetchClients();
+      setSelectedClientId(savedClient.id);
+      setData({ ...data, clientName: savedClient.name, whatsapp: savedClient.phone, workAddress: savedClient.address });
+      setIsAddingClient(false);
+      setNewClient({ name: '', phone: '', address: '' });
+      alert("✅ Cliente cadastrado e selecionado!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Erro ao cadastrar cliente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addItem = () => {
     const newItem: BudgetItem = {
@@ -183,48 +217,81 @@ export default function LegacyBudgetEditor() {
 
   const totalItemsValue = data.items.reduce((acc, curr) => acc + curr.total, 0);
 
-
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 pb-10 touch-pan-y antialiased font-sans">
         <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
           {/* Editor View */}
           <section className="glass-panel p-4 rounded-xl border-l-2 border-l-blue-500">
-            <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Building2 size={12} /> Dados do Contrato
-            </h2>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-[8px] font-bold text-slate-600 uppercase">Cliente</label>
-                <select 
-                  value={selectedClientId} 
-                  onChange={e => {
-                    setSelectedClientId(e.target.value);
-                    const sel = clients.find(c => c.id === e.target.value);
-                    if (sel) setData({ ...data, clientName: sel.name });
-                  }} 
-                  className="w-full glass-input rounded-lg px-3 py-2 text-sm mb-2"
-                >
-                  <option value="">-- Selecione ou digite abaixo --</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <input type="text" placeholder="Ou digite o nome avulso" value={data.clientName} onChange={e => { setData({ ...data, clientName: e.target.value }); setSelectedClientId(''); }} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[8px] font-bold text-slate-600 uppercase">WhatsApp</label>
-                  <input type="tel" value={data.whatsapp} onChange={e => setData({ ...data, whatsapp: formatWhatsApp(e.target.value) })} maxLength={13} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[8px] font-bold text-slate-600 uppercase">Validade (Dias)</label>
-                  <input type="number" value={data.validityDays} onChange={e => setData({ ...data, validityDays: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm font-bold text-amber-500" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-bold text-slate-600 uppercase">Endereço da Obra</label>
-                <input type="text" value={data.workAddress} onChange={e => setData({ ...data, workAddress: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
-              </div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[10px] font-black text-blue-500 uppercase tracking-widest flex items-center gap-2">
+                <Building2 size={12} /> Dados do Contrato
+              </h2>
+              <button 
+                onClick={() => setIsAddingClient(!isAddingClient)}
+                className="text-[10px] font-bold text-amber-500 uppercase flex items-center gap-1 hover:opacity-80 transition-opacity"
+              >
+                {isAddingClient ? 'Cancelar' : <><Plus size={12} /> Novo Cliente</>}
+              </button>
             </div>
+
+            {isAddingClient ? (
+              <div className="space-y-3 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20 mb-3 animate-in fade-in slide-in-from-top-2">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-bold text-slate-600 uppercase">Nome Completo</label>
+                  <input type="text" value={newClient.name} onChange={e => setNewClient({ ...newClient, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" placeholder="Nome do Cliente" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-600 uppercase">WhatsApp</label>
+                    <input type="tel" value={newClient.phone} onChange={e => setNewClient({ ...newClient, phone: formatWhatsApp(e.target.value) })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" placeholder="21 90000-0000" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-600 uppercase">Endereço</label>
+                    <input type="text" value={newClient.address} onChange={e => setNewClient({ ...newClient, address: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" placeholder="Opcional" />
+                  </div>
+                </div>
+                <button 
+                  onClick={handleQuickAddClient}
+                  disabled={isLoading}
+                  className="w-full py-2 bg-amber-500 text-black font-black text-[10px] uppercase rounded-lg hover:bg-amber-400 transition-colors"
+                >
+                  Confirmar Cadastro
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-bold text-slate-600 uppercase">Cliente</label>
+                  <select 
+                    value={selectedClientId} 
+                    onChange={e => {
+                      setSelectedClientId(e.target.value);
+                      const sel = clients.find(c => c.id === e.target.value);
+                      if (sel) setData({ ...data, clientName: sel.name });
+                    }} 
+                    className="w-full glass-input rounded-lg px-3 py-2 text-sm mb-2"
+                  >
+                    <option value="">-- Selecione ou digite abaixo --</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <input type="text" placeholder="Ou digite o nome avulso" value={data.clientName} onChange={e => { setData({ ...data, clientName: e.target.value }); setSelectedClientId(''); }} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-600 uppercase">WhatsApp</label>
+                    <input type="tel" value={data.whatsapp} onChange={e => setData({ ...data, whatsapp: formatWhatsApp(e.target.value) })} maxLength={13} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-bold text-slate-600 uppercase">Validade (Dias)</label>
+                    <input type="number" value={data.validityDays} onChange={e => setData({ ...data, validityDays: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm font-bold text-amber-500" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] font-bold text-slate-600 uppercase">Endereço da Obra</label>
+                  <input type="text" value={data.workAddress} onChange={e => setData({ ...data, workAddress: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="space-y-3">
@@ -253,7 +320,13 @@ export default function LegacyBudgetEditor() {
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="number" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="w-14 bg-slate-900/5 dark:bg-white/5 rounded-lg p-1.5 text-xs text-center font-bold" />
-                    <CurrencyInput value={item.unitPrice} onValueChange={(val) => updateItem(item.id, 'unitPrice', val || 0)} className="flex-1 bg-blue-500/5 rounded-lg p-1.5 text-xs text-right font-bold text-blue-400" />
+                    <CurrencyInput
+                      value={item.unitPrice || undefined}
+                      onValueChange={(val) => updateItem(item.id, 'unitPrice', val || 0)}
+                      placeholder="R$ 0,00"
+                      onFocus={(e) => e.target.select()}
+                      className="flex-1 bg-blue-500/5 rounded-lg p-1.5 text-xs text-right font-bold text-blue-400"
+                    />
                     <div className="w-20 text-right text-xs font-black text-slate-900 dark:text-white">
                       {item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </div>
@@ -290,18 +363,12 @@ export default function LegacyBudgetEditor() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="flex gap-1.5">
                 <button
                   onClick={() => handleGenerate('commercial')}
-                  className="h-9 bg-white dark:bg-[#1a2b4b] hover:bg-[#243c66] text-slate-900 dark:text-white border border-slate-900/15 dark:border-white/10 rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
+                  className="flex-1 h-9 bg-white dark:bg-[#1a2b4b] hover:bg-[#243c66] text-slate-900 dark:text-white border border-slate-900/15 dark:border-white/10 rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
                 >
-                  {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={12} /> : <><Download size={12} /> COMERCIAL</>}
-                </button>
-                <button
-                  onClick={() => handleGenerate('materials')}
-                  className="h-9 bg-[#009ee3] hover:bg-blue-400 text-slate-900 dark:text-white rounded-md flex items-center justify-center gap-2 text-[8px] font-black uppercase transition-all active:scale-95"
-                >
-                  {isGenerating === 'materials' ? <RefreshCw className="animate-spin" size={12} /> : <><Download size={12} /> MATERIAIS</>}
+                  {isGenerating === 'commercial' ? <RefreshCw className="animate-spin" size={12} /> : <><Download size={12} /> GERAR PDF COMERCIAL</>}
                 </button>
               </div>
             </div>

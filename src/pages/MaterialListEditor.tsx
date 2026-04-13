@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 const CATEGORIES = ['Elétrica', 'Hidráulica', 'Infraestrutura', 'Acabamento', 'Geral'];
-const UNITS = ['un', 'm', 'pç', 'cx', 'kit', 'm²', 'm³'];
+const UNITS = ['un', 'm', 'pç', 'cx', 'kit', 'm²'];
 
 export default function MaterialListEditor() {
   const navigate = useNavigate();
@@ -35,11 +35,16 @@ export default function MaterialListEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [clients, setClients] = useState<any[]>([]);
+  const [isAddingClient, setIsAddingClient] = useState(false);
+  const [newClient, setNewClient] = useState({ name: '', phone: '', address: '' });
+
+  const fetchClients = async () => {
+    const { data: d } = await supabase.from('clients').select('id, name').order('name');
+    if (d) setClients(d);
+  };
 
   useEffect(() => {
-    supabase.from('clients').select('id, name').order('name').then(({data: d}) => {
-      if (d) setClients(d);
-    });
+    fetchClients();
 
     if (id) {
       loadList(id);
@@ -74,6 +79,36 @@ export default function MaterialListEditor() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleQuickAddClient = async () => {
+    if (!newClient.name) return alert("Informe o nome do cliente.");
+    setIsLoading(true);
+    try {
+      const { data: savedClient, error } = await supabase
+        .from('clients')
+        .insert({
+          name: newClient.name,
+          phone: newClient.phone,
+          address: newClient.address,
+          user_id: user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchClients();
+      setData({ ...data, client_id: savedClient.id, clientName: savedClient.name });
+      setIsAddingClient(false);
+      setNewClient({ name: '', phone: '', address: '' });
+      alert("✅ Cliente cadastrado e vinculado!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Erro ao cadastrar cliente.");
     } finally {
       setIsLoading(false);
     }
@@ -187,29 +222,54 @@ export default function MaterialListEditor() {
         </button>
 
         <section className="glass-panel p-4 rounded-xl border-l-2 border-l-emerald-500">
-          <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <Building2 size={12} /> Configuração da Lista
-          </h2>
-          <div className="space-y-3">
-            <div className="space-y-1">
-               <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Nome da Lista</label>
-               <input type="text" placeholder="Ex: Lista Área Externa" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Vincular a Cliente (Opcional)</label>
-              <select 
-                value={data.client_id} 
-                onChange={e => {
-                  const sel = clients.find(c => c.id === e.target.value);
-                  setData({ ...data, client_id: e.target.value, clientName: sel ? sel.name : '' });
-                }} 
-                className="w-full glass-input rounded-lg px-3 py-2 text-sm"
-              >
-                <option value="">-- Sem cliente --</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+              <Building2 size={12} /> Configuração da Lista
+            </h2>
+            <button 
+              onClick={() => setIsAddingClient(!isAddingClient)}
+              className="text-[10px] font-bold text-amber-500 uppercase flex items-center gap-1 hover:opacity-80 transition-opacity"
+            >
+              {isAddingClient ? 'Cancelar' : <><Plus size={12} /> Novo Cliente</>}
+            </button>
           </div>
+
+          {isAddingClient ? (
+            <div className="space-y-3 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20 mb-3 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-slate-600 dark:text-slate-400 uppercase">Nome Completo</label>
+                <input type="text" value={newClient.name} onChange={e => setNewClient({ ...newClient, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" placeholder="Nome do Cliente" />
+              </div>
+              <button 
+                onClick={handleQuickAddClient}
+                disabled={isLoading}
+                className="w-full py-2 bg-amber-500 text-black font-black text-[10px] uppercase rounded-lg hover:bg-amber-400 transition-colors"
+              >
+                Confirmar e Vincular
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                 <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Nome da Lista</label>
+                 <input type="text" placeholder="Ex: Lista Área Externa" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Vincular a Cliente (Opcional)</label>
+                <select 
+                  value={data.client_id} 
+                  onChange={e => {
+                    const sel = clients.find(c => c.id === e.target.value);
+                    setData({ ...data, client_id: e.target.value, clientName: sel ? sel.name : '' });
+                  }} 
+                  className="w-full glass-input rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="">-- Sem cliente --</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="space-y-3">
