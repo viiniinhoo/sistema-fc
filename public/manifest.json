@@ -1,0 +1,21 @@
+{
+  "name": "LVC Elétrica - Central de Orçamentos",
+  "short_name": "LVC Elétrica",
+  "description": "Sistema Interno LVC Elétrica - Gerador Profissional de Orçamentos e Listas de Materiais.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
