@@ -41,7 +41,7 @@ export default function MobileShell() {
     <div className="flex flex-col h-[100dvh] bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 overflow-hidden">
       
       {/* Top Header */}
-      <header className="shrink-0 bg-[#1a2b4b] border-b border-slate-900/10 dark:border-white/5 px-4 h-14 flex items-center justify-between shadow-md z-10">
+      <header className="shrink-0 bg-[#1a2b4b] border-b border-slate-900/10 dark:border-white/5 px-4 h-14 pt-[env(safe-area-inset-top)] flex items-center justify-between shadow-md z-10 box-content">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="LVC Logo" className="h-6 w-auto" />
           <h1 className="text-lg font-black italic tracking-tighter leading-none">
@@ -85,12 +85,12 @@ export default function MobileShell() {
       </header>
 
       {/* Main Content Area (Scrollable) */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y relative pb-safe">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden touch-pan-y relative px-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <Outlet />
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-slate-900/15 dark:border-white/10 flex justify-around items-end h-16 pb-2 pt-1 px-2 z-50">
+      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-slate-900/15 dark:border-white/10 flex justify-around items-end h-16 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-1 px-2 z-50 box-content">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
