@@ -90,7 +90,7 @@ export default function MobileShell() {
       </main>
 
       {/* Bottom Navigation Bar */}
-      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-slate-900/15 dark:border-white/10 flex justify-around items-center h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] px-2 z-50">
+      <nav className="shrink-0 bg-[#1a2b4b]/95 backdrop-blur-md border-t border-slate-900/15 dark:border-white/10 flex justify-around items-center pt-2 pb-[env(safe-area-inset-bottom)] px-2 z-50">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
