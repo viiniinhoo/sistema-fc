@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Reorder } from 'framer-motion';
+import { Reorder, useDragControls } from 'framer-motion';
 import type { QdcCircuit, QdcPanelData } from '../types';
 import { generateQdcPDF } from '../utils/qdcPdfGenerator';
 import { saveQdcPanel, getQdcPanelById } from '../services/qdcService';
@@ -47,6 +47,167 @@ const BREAKER_PRESETS = [
   '70A - tripolar',
   '100A - tripolar'
 ];
+
+interface QdcCircuitItemProps {
+  circuit: QdcCircuit;
+  idx: number;
+  totalCircuits: number;
+  moveCircuit: (index: number, direction: 'up' | 'down') => void;
+  removeCircuit: (circuitId: string) => void;
+  updateCircuit: (circuitId: string, field: keyof QdcCircuit, value: string | number) => void;
+}
+
+function QdcCircuitItem({
+  circuit,
+  idx,
+  totalCircuits,
+  moveCircuit,
+  removeCircuit,
+  updateCircuit
+}: QdcCircuitItemProps) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      key={circuit.id}
+      value={circuit}
+      dragControls={dragControls}
+      dragListener={false}
+      className="bg-white/90 dark:bg-[#1a2b4b]/90 backdrop-blur-md rounded-2xl p-3 border border-slate-900/10 dark:border-white/5 shadow-md transition-all select-none"
+    >
+      <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-900/5 dark:border-white/5">
+        <div className="flex items-center gap-2">
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
+            className="p-1.5 rounded-lg hover:bg-slate-900/10 dark:hover:bg-white/10 text-amber-500 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center bg-amber-500/10 border border-amber-500/20 active:scale-95 transition-transform"
+            title="Segure e arraste pelos 6 pontinhos"
+          >
+            <GripVertical size={18} />
+          </div>
+          <span className="text-xs font-black text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
+            Nº {circuit.identification || idx + 1}
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">
+            Posição {idx + 1}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => moveCircuit(idx, 'up')}
+            disabled={idx === 0}
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-30 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Mover para cima"
+          >
+            <ArrowUp size={14} />
+          </button>
+          <button
+            onClick={() => moveCircuit(idx, 'down')}
+            disabled={idx === totalCircuits - 1}
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-30 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Mover para baixo"
+          >
+            <ArrowDown size={14} />
+          </button>
+          <button
+            onClick={() => removeCircuit(circuit.id)}
+            className="p-1.5 ml-1 text-red-400 hover:text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+            title="Excluir circuito"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Circuit details form inputs */}
+      <div className="space-y-2">
+        <div className="grid grid-cols-12 gap-2">
+          <div className="col-span-3 sm:col-span-2">
+            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
+              Ident.
+            </label>
+            <input
+              type="text"
+              value={circuit.identification}
+              onChange={e => updateCircuit(circuit.id, 'identification', e.target.value)}
+              className="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-center text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
+              placeholder="01"
+            />
+          </div>
+
+          <div className="col-span-9 sm:col-span-10">
+            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
+              Descrição / Local Atendido
+            </label>
+            <input
+              type="text"
+              value={circuit.description}
+              onChange={e => updateCircuit(circuit.id, 'description', e.target.value)}
+              className="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
+              placeholder="Ex: Chuveiro Banheiro Suíte, Tomadas Cozinha..."
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <div>
+            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
+              Bitola do Cabo (Seção)
+            </label>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={circuit.cableSize}
+                onChange={e => updateCircuit(circuit.id, 'cableSize', e.target.value)}
+                className="flex-1 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
+                placeholder="Ex: 2,50mm²"
+              />
+              <select
+                onChange={e => e.target.value && updateCircuit(circuit.id, 'cableSize', e.target.value)}
+                value=""
+                className="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1 text-xs text-slate-700 dark:text-slate-300"
+              >
+                <option value="">Padrões</option>
+                {CABLE_PRESETS.map(preset => (
+                  <option key={preset} value={preset}>
+                    {preset}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
+              Disjuntor / Amperagem (A)
+            </label>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={circuit.breakerRating}
+                onChange={e => updateCircuit(circuit.id, 'breakerRating', e.target.value)}
+                className="flex-1 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
+                placeholder="Ex: 25A - unipolar"
+              />
+              <select
+                onChange={e => e.target.value && updateCircuit(circuit.id, 'breakerRating', e.target.value)}
+                value=""
+                className="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1 text-xs text-slate-700 dark:text-slate-300"
+              >
+                <option value="">Padrões</option>
+                {BREAKER_PRESETS.map(preset => (
+                  <option key={preset} value={preset}>
+                    {preset}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reorder.Item>
+  );
+}
 
 export default function QdcEditor() {
   const navigate = useNavigate();
@@ -429,138 +590,15 @@ export default function QdcEditor() {
             className="space-y-2.5"
           >
             {panel.circuits.map((circuit, idx) => (
-              <Reorder.Item
+              <QdcCircuitItem
                 key={circuit.id}
-                value={circuit}
-                className="bg-white/90 dark:bg-[#1a2b4b]/90 backdrop-blur-md rounded-2xl p-3 border border-slate-900/10 dark:border-white/5 shadow-md active:shadow-xl transition-all cursor-grab active:cursor-grabbing"
-              >
-                <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-900/5 dark:border-white/5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-lg hover:bg-slate-900/5 dark:hover:bg-white/5 text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing">
-                      <GripVertical size={18} />
-                    </div>
-                    <span className="text-xs font-black text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg">
-                      Nº {circuit.identification || idx + 1}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">
-                      Posição {idx + 1}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => moveCircuit(idx, 'up')}
-                      disabled={idx === 0}
-                      className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-30"
-                      title="Mover para cima"
-                    >
-                      <ArrowUp size={14} />
-                    </button>
-                    <button
-                      onClick={() => moveCircuit(idx, 'down')}
-                      disabled={idx === panel.circuits.length - 1}
-                      className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white disabled:opacity-30"
-                      title="Mover para baixo"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
-                    <button
-                      onClick={() => removeCircuit(circuit.id)}
-                      className="p-1 ml-1 text-red-400 hover:text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
-                      title="Excluir circuito"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Circuit details form inputs */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2">
-                    <div className="col-span-3 sm:col-span-2">
-                      <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
-                        Ident.
-                      </label>
-                      <input
-                        type="text"
-                        value={circuit.identification}
-                        onChange={e => updateCircuit(circuit.id, 'identification', e.target.value)}
-                        className="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-black text-center text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
-                        placeholder="01"
-                      />
-                    </div>
-
-                    <div className="col-span-9 sm:col-span-10">
-                      <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
-                        Descrição / Local Atendido
-                      </label>
-                      <input
-                        type="text"
-                        value={circuit.description}
-                        onChange={e => updateCircuit(circuit.id, 'description', e.target.value)}
-                        className="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
-                        placeholder="Ex: Chuveiro Banheiro Suíte, Tomadas Cozinha..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
-                        Bitola do Cabo (Seção)
-                      </label>
-                      <div className="flex gap-1">
-                        <input
-                          type="text"
-                          value={circuit.cableSize}
-                          onChange={e => updateCircuit(circuit.id, 'cableSize', e.target.value)}
-                          className="flex-1 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
-                          placeholder="Ex: 2,50mm²"
-                        />
-                        <select
-                          onChange={e => e.target.value && updateCircuit(circuit.id, 'cableSize', e.target.value)}
-                          value=""
-                          className="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1 text-xs text-slate-700 dark:text-slate-300"
-                        >
-                          <option value="">Padrões</option>
-                          {CABLE_PRESETS.map(preset => (
-                            <option key={preset} value={preset}>
-                              {preset}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
-                        Disjuntor / Amperagem (A)
-                      </label>
-                      <div className="flex gap-1">
-                        <input
-                          type="text"
-                          value={circuit.breakerRating}
-                          onChange={e => updateCircuit(circuit.id, 'breakerRating', e.target.value)}
-                          className="flex-1 bg-slate-100 dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-[#009ee3]"
-                          placeholder="Ex: 25A - unipolar"
-                        />
-                        <select
-                          onChange={e => e.target.value && updateCircuit(circuit.id, 'breakerRating', e.target.value)}
-                          value=""
-                          className="bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1 text-xs text-slate-700 dark:text-slate-300"
-                        >
-                          <option value="">Padrões</option>
-                          {BREAKER_PRESETS.map(preset => (
-                            <option key={preset} value={preset}>
-                              {preset}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Reorder.Item>
+                circuit={circuit}
+                idx={idx}
+                totalCircuits={panel.circuits.length}
+                moveCircuit={moveCircuit}
+                removeCircuit={removeCircuit}
+                updateCircuit={updateCircuit}
+              />
             ))}
           </Reorder.Group>
 
