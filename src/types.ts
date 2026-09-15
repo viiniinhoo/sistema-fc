@@ -18,3 +18,25 @@ export interface BudgetData {
   items: BudgetItem[];
   observations: string;
 }
+
+export interface QdcCircuit {
+  id: string;
+  identification: string;
+  cableSize: string;
+  description: string;
+  breakerRating: string;
+  positionOrder: number;
+}
+
+export interface QdcPanelData {
+  id?: string;
+  name: string;
+  clientId?: string;
+  clientName?: string;
+  workAddress?: string;
+  circuits: QdcCircuit[];
+  observations?: string;
+  created_at?: string;
+  created_by?: string;
+}
+

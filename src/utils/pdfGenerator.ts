@@ -53,13 +53,15 @@ const drawHeader = async (doc: jsPDF, title: string, rightText: string) => {
     doc.text('LVC ELÉTRICA', textStart, textYLine1);
 
     const { data: { user } } = await supabase.auth.getUser();
-    const userName = user?.user_metadata?.name || 'Instalações e Manutenções';
-    const userPhone = user?.user_metadata?.phone || 'Elétricas';
+    const userName = user?.user_metadata?.name || 'Vinicius Cardoso';
+    const userPhone = user?.user_metadata?.phone || '21986757505';
+
+    const respText = userPhone ? `${userName} - ${userPhone}` : userName;
 
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(title.toUpperCase(), textStart, textYLine1 + 5);
-    doc.text(`${userName} - ${userPhone}`, textStart, textYLine1 + 9);
+    doc.text(respText, textStart, textYLine1 + 9);
   } catch {
     doc.setTextColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(20);

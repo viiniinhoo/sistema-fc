@@ -13,6 +13,8 @@ import BudgetsList from './pages/BudgetsList';
 import MaterialsList from './pages/MaterialsList';
 import SettingsProfile from './pages/SettingsProfile';
 import MaterialListEditor from './pages/MaterialListEditor';
+import QdcPanelsList from './pages/QdcPanelsList';
+import QdcEditor from './pages/QdcEditor';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -37,6 +39,9 @@ const AppRoutes = () => {
         <Route path="listas" element={<MaterialsList />} />
         <Route path="lista/nova" element={<MaterialListEditor />} />
         <Route path="lista/:id" element={<MaterialListEditor />} />
+        <Route path="qdc" element={<QdcPanelsList />} />
+        <Route path="qdc/novo" element={<QdcEditor />} />
+        <Route path="qdc/:id" element={<QdcEditor />} />
         <Route path="clientes" element={<ClientsList />} />
         <Route path="perfil" element={<SettingsProfile />} />
       </Route>

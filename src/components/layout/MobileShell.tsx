@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Home, FileText, Package, Users, LogOut, WifiOff, Wifi, Sun, Moon, User } from 'lucide-react';
+import { Home, FileText, Package, Users, LogOut, WifiOff, Wifi, Sun, Moon, User, Zap } from 'lucide-react';
 
 export default function MobileShell() {
   const { signOut } = useAuth();
@@ -34,6 +34,7 @@ export default function MobileShell() {
     { to: '/', icon: Home, label: 'Início' },
     { to: '/orcamentos', icon: FileText, label: 'Orçamentos' },
     { to: '/listas', icon: Package, label: 'Materiais' },
+    { to: '/qdc', icon: Zap, label: 'QDC' },
     { to: '/clientes', icon: Users, label: 'Clientes' }
   ];
 
