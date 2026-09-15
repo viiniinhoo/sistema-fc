@@ -23,7 +23,7 @@ export default function MaterialListEditor() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
-  
+
   const [data, setData] = useState({
     id: '',
     name: '',
@@ -31,7 +31,7 @@ export default function MaterialListEditor() {
     clientName: '',
     items: [] as BudgetItem[]
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [clients, setClients] = useState<any[]>([]);
@@ -59,7 +59,7 @@ export default function MaterialListEditor() {
         .select('*, clients(*), material_list_items(*)')
         .eq('id', listId)
         .single();
-        
+
       if (!error && list) {
         setData({
           id: list.id,
@@ -71,7 +71,7 @@ export default function MaterialListEditor() {
             description: item.description,
             quantity: Number(item.quantity),
             unit: item.unit,
-            category: 'Geral',
+            category: item.category || 'Geral',
             unitPrice: 0,
             total: 0
           }))
@@ -119,7 +119,7 @@ export default function MaterialListEditor() {
     setIsLoading(true);
     try {
       const listId = data.id || uuidv4();
-      
+
       const listPayload = {
         id: listId,
         name: data.name,
@@ -148,12 +148,13 @@ export default function MaterialListEditor() {
           material_list_id: listId,
           description: msg.description,
           quantity: msg.quantity,
-          unit: msg.unit
+          unit: msg.unit,
+          category: msg.category || 'Geral'
         }));
         const { error: itemsError } = await supabase.from('material_list_items').insert(itemsPayload);
         if (itemsError) throw itemsError;
       }
-      
+
       setData({ ...data, id: listId });
       alert("✅ Lista de Materiais salva com sucesso!");
       if (!data.id) navigate('/listas');
@@ -216,7 +217,7 @@ export default function MaterialListEditor() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#030712] text-slate-800 dark:text-slate-100 pb-10 touch-pan-y antialiased font-sans">
       <div className="max-w-6xl mx-auto px-3 py-4 space-y-4">
-        
+
         <button onClick={() => navigate('/listas')} className="text-emerald-500 font-bold uppercase text-xs flex items-center gap-1 mb-2">
           <ArrowLeft size={14} /> Voltar para Listas
         </button>
@@ -226,7 +227,7 @@ export default function MaterialListEditor() {
             <h2 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
               <Building2 size={12} /> Configuração da Lista
             </h2>
-            <button 
+            <button
               onClick={() => setIsAddingClient(!isAddingClient)}
               className="text-[10px] font-bold text-amber-500 uppercase flex items-center gap-1 hover:opacity-80 transition-opacity"
             >
@@ -240,7 +241,7 @@ export default function MaterialListEditor() {
                 <label className="text-[8px] font-bold text-slate-600 dark:text-slate-400 uppercase">Nome Completo</label>
                 <input type="text" value={newClient.name} onChange={e => setNewClient({ ...newClient, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" placeholder="Nome do Cliente" />
               </div>
-              <button 
+              <button
                 onClick={handleQuickAddClient}
                 disabled={isLoading}
                 className="w-full py-2 bg-amber-500 text-black font-black text-[10px] uppercase rounded-lg hover:bg-amber-400 transition-colors"
@@ -251,17 +252,17 @@ export default function MaterialListEditor() {
           ) : (
             <div className="space-y-3">
               <div className="space-y-1">
-                 <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Nome da Lista</label>
-                 <input type="text" placeholder="Ex: Lista Área Externa" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
+                <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Nome da Lista</label>
+                <input type="text" placeholder="Ex: Lista Área Externa" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} className="w-full glass-input rounded-lg px-3 py-2 text-sm" />
               </div>
               <div className="space-y-1">
                 <label className="text-[8px] font-bold text-slate-600 dark:text-slate-500 uppercase">Vincular a Cliente (Opcional)</label>
-                <select 
-                  value={data.client_id} 
+                <select
+                  value={data.client_id}
                   onChange={e => {
                     const sel = clients.find(c => c.id === e.target.value);
                     setData({ ...data, client_id: e.target.value, clientName: sel ? sel.name : '' });
-                  }} 
+                  }}
                   className="w-full glass-input rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="">-- Sem cliente --</option>
@@ -288,10 +289,10 @@ export default function MaterialListEditor() {
                   <button onClick={() => removeItem(item.id)} className="text-red-500/50 hover:text-red-500"><Trash2 size={14} /></button>
                 </div>
                 <input type="text" value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} className="w-full bg-slate-200 dark:bg-black/40 rounded-lg p-2 text-sm mb-2" placeholder="Descrição do Material..." />
-                
+
                 <div className="grid grid-cols-3 gap-2">
                   <input type="number" placeholder="Qtd" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', e.target.value)} className="bg-slate-900/5 dark:bg-white/5 rounded-lg p-1.5 text-xs text-center font-bold" />
-                  
+
                   <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)} className="bg-slate-200 dark:bg-black/40 rounded-lg p-1.5 text-xs text-slate-600 dark:text-slate-300">
                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
