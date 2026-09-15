@@ -611,25 +611,23 @@ export default function QdcEditor() {
           </button>
         </section>
 
-        {/* Floating Action Toolbar */}
-        <div className="fixed bottom-16 left-0 right-0 max-w-4xl mx-auto px-3 z-40">
-          <div className="p-2 bg-white/95 dark:bg-[#1a2b4b]/95 backdrop-blur-2xl border border-slate-900/15 dark:border-white/10 rounded-2xl shadow-2xl flex gap-2">
+        {/* Action Toolbar */}
+        <div className="p-1.5 bg-white/98 dark:bg-[#1a2b4b]/98 backdrop-blur-2xl border border-slate-900/15 dark:border-white/10 rounded-2xl shadow-2xl">
+          <div className="flex gap-2">
             <button
               onClick={handleSave}
               disabled={isLoading}
-              className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md disabled:opacity-50"
+              className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white font-black text-[10px] uppercase rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              {isLoading ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
-              {panel.id ? 'Atualizar Quadro' : 'Salvar Quadro (QDC)'}
+              {isLoading ? <RefreshCw className="animate-spin" size={12} /> : <Save size={12} />}
+              {panel.id ? 'Atualizar Quadro' : 'Salvar Quadro'}
             </button>
-
             <button
               onClick={handleGeneratePDF}
               disabled={isGenerating}
-              className="px-5 h-12 bg-[#009ee3] hover:bg-blue-400 text-white rounded-xl flex items-center justify-center font-black text-xs uppercase tracking-wider gap-2 transition-all active:scale-95 shadow-md disabled:opacity-50"
+              className="w-14 h-10 bg-[#009ee3] hover:bg-blue-400 text-slate-900 dark:text-white rounded-xl flex items-center justify-center font-black uppercase transition-all active:scale-95"
             >
-              {isGenerating ? <RefreshCw className="animate-spin" size={16} /> : <Download size={16} />}
-              <span>Gerar PDF QDC</span>
+              {isGenerating ? <RefreshCw className="animate-spin" size={14} /> : <Download size={14} />}
             </button>
           </div>
         </div>
