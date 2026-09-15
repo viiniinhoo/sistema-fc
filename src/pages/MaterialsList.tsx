@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, PlusCircle, ArrowRight, Package, Trash2 } from 'lucide-react';
+import { Search, PlusCircle, ArrowRight, Package, Trash2, Download, RefreshCw } from 'lucide-react';
+import { generateMaterialListPDF } from '../utils/pdfGenerator';
+import type { BudgetData } from '../types';
 
 export default function MaterialsList() {
   const navigate = useNavigate();
@@ -9,6 +11,7 @@ export default function MaterialsList() {
   const [lists, setLists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLists();
@@ -50,6 +53,54 @@ export default function MaterialsList() {
     if (error) {
       alert("Erro ao excluir.");
       fetchLists();
+    }
+  };
+
+  const handleDownloadPDF = async (e: React.MouseEvent, listId: string) => {
+    e.stopPropagation();
+    setGeneratingId(listId);
+    try {
+      const { data: list, error } = await supabase
+        .from('material_lists')
+        .select(`
+          *,
+          clients ( name ),
+          material_list_items ( * )
+        `)
+        .eq('id', listId)
+        .single();
+
+      if (error || !list) throw new Error('Erro ao buscar lista de materiais');
+
+      if (!list.material_list_items || list.material_list_items.length === 0) {
+        alert('Esta lista de materiais não possui itens para gerar PDF.');
+        return;
+      }
+
+      const pdfData: BudgetData = {
+        clientName: list.clients?.name || 'Cliente Avulso',
+        whatsapp: '',
+        workAddress: '',
+        validityDays: '5',
+        paymentTerms: '',
+        items: list.material_list_items.map((item: any) => ({
+          id: item.id,
+          description: item.description,
+          quantity: Number(item.quantity) || 1,
+          unit: item.unit || 'un',
+          category: item.category || 'Geral',
+          unitPrice: 0,
+          total: 0
+        })),
+        observations: ''
+      };
+
+      await generateMaterialListPDF(pdfData);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      alert('Erro ao gerar PDF da lista de materiais.');
+    } finally {
+      setGeneratingId(null);
     }
   };
 
@@ -102,12 +153,28 @@ export default function MaterialsList() {
                      )}
                    </div>
                 </div>
-                <button 
-                  onClick={(e) => handleDelete(e, list.id)} 
-                  className="p-1 text-slate-400 hover:text-red-500 transition-colors bg-white/5 rounded"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleDownloadPDF(e, list.id)}
+                    disabled={generatingId === list.id}
+                    className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                    title="Baixar PDF da Lista de Materiais"
+                  >
+                    {generatingId === list.id ? (
+                      <RefreshCw size={16} className="animate-spin text-emerald-500" />
+                    ) : (
+                      <Download size={16} />
+                    )}
+                  </button>
+
+                  <button 
+                    onClick={(e) => handleDelete(e, list.id)} 
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Excluir Lista"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               
               <div className="flex items-center justify-between mt-3">                

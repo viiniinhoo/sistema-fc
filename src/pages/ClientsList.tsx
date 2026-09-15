@@ -13,7 +13,7 @@ export default function ClientsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentClient, setCurrentClient] = useState<any>({ name: '', phone: '', address: '', email: '' });
-  const [clientHistory, setClientHistory] = useState({ budgets: 0, lists: 0 });
+  const [clientHistory, setClientHistory] = useState({ budgets: 0, lists: 0, qdcs: 0 });
 
   useEffect(() => {
     fetchClients();
@@ -82,15 +82,17 @@ export default function ClientsList() {
   const handleEditClient = async (client: any) => {
     setCurrentClient(client);
     setIsModalOpen(true);
-    setClientHistory({ budgets: 0, lists: 0 });
+    setClientHistory({ budgets: 0, lists: 0, qdcs: 0 });
     try {
-      const [b, l] = await Promise.all([
+      const [b, l, q] = await Promise.all([
         supabase.from('budgets').select('id', { count: 'exact', head: true }).eq('client_id', client.id),
-        supabase.from('material_lists').select('id', { count: 'exact', head: true }).eq('client_id', client.id)
+        supabase.from('material_lists').select('id', { count: 'exact', head: true }).eq('client_id', client.id),
+        supabase.from('qdc_panels').select('id', { count: 'exact', head: true }).eq('client_id', client.id)
       ]);
       setClientHistory({
         budgets: b.count || 0,
-        lists: l.count || 0
+        lists: l.count || 0,
+        qdcs: q.count || 0
       });
     } catch {}
   };
@@ -225,21 +227,29 @@ export default function ClientsList() {
               </div>
 
               {currentClient.id && (
-                <div className="bg-slate-900/5 dark:bg-white/5 rounded-xl p-3 mt-2 flex items-center justify-around border border-slate-900/10 dark:border-white/5">
+                <div className="bg-slate-900/5 dark:bg-white/5 rounded-xl p-3 mt-2 flex items-center justify-around border border-slate-900/10 dark:border-white/5 gap-1">
                   <div 
                     onClick={() => navigate(`/orcamentos?search=${encodeURIComponent(currentClient.name)}`)}
-                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors"
+                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors flex-1"
                   >
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Orçamentos</p>
-                    <p className="text-xl font-black text-[#009ee3]">{clientHistory.budgets}</p>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Orçamentos</p>
+                    <p className="text-lg font-black text-[#009ee3]">{clientHistory.budgets}</p>
                   </div>
                   <div className="w-[1px] h-8 bg-slate-900/10 dark:bg-white/10" />
                   <div 
                     onClick={() => navigate(`/listas?search=${encodeURIComponent(currentClient.name)}`)}
-                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors"
+                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors flex-1"
                   >
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Listas Limpas</p>
-                    <p className="text-xl font-black text-emerald-500">{clientHistory.lists}</p>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Listas Limpas</p>
+                    <p className="text-lg font-black text-emerald-500">{clientHistory.lists}</p>
+                  </div>
+                  <div className="w-[1px] h-8 bg-slate-900/10 dark:bg-white/10" />
+                  <div 
+                    onClick={() => navigate(`/qdc?search=${encodeURIComponent(currentClient.name)}`)}
+                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors flex-1"
+                  >
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Quadros QDC</p>
+                    <p className="text-lg font-black text-amber-500">{clientHistory.qdcs}</p>
                   </div>
                 </div>
               )}

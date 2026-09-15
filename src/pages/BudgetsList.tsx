@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, PlusCircle, ArrowRight, Trash2 } from 'lucide-react';
+import { Search, PlusCircle, ArrowRight, Trash2, Download, RefreshCw } from 'lucide-react';
+import { getBudgetById } from '../services/supabaseService';
+import { generateCommercialPDF } from '../utils/pdfGenerator';
 // We do not import React to avoid lint errors if we don't use it directly
 
 export default function BudgetsList() {
@@ -10,6 +12,7 @@ export default function BudgetsList() {
   const [budgets, setBudgets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBudgets();
@@ -47,6 +50,24 @@ export default function BudgetsList() {
     if (error) {
       alert("Erro ao excluir.");
       fetchBudgets();
+    }
+  };
+
+  const handleDownloadPDF = async (e: React.MouseEvent, budgetId: string) => {
+    e.stopPropagation();
+    setGeneratingId(budgetId);
+    try {
+      const b = await getBudgetById(budgetId);
+      if (!b || !b.items || b.items.length === 0) {
+        alert("Este orçamento não possui itens para gerar PDF.");
+        return;
+      }
+      await generateCommercialPDF(b as any);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      alert('Erro ao gerar PDF do orçamento.');
+    } finally {
+      setGeneratingId(null);
     }
   };
 
@@ -106,7 +127,7 @@ export default function BudgetsList() {
                   )}
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <select 
                     value={budget.status || 'Pendente'}
                     onChange={(e) => handleStatusChange(e, budget.id)}
@@ -123,8 +144,22 @@ export default function BudgetsList() {
                   </select>
                   
                   <button 
+                    onClick={(e) => handleDownloadPDF(e, budget.id)}
+                    disabled={generatingId === budget.id}
+                    className="p-1.5 text-slate-400 hover:text-[#009ee3] hover:bg-[#009ee3]/10 rounded-lg transition-all"
+                    title="Baixar PDF do Orçamento"
+                  >
+                    {generatingId === budget.id ? (
+                      <RefreshCw size={16} className="animate-spin text-[#009ee3]" />
+                    ) : (
+                      <Download size={16} />
+                    )}
+                  </button>
+
+                  <button 
                     onClick={(e) => handleDelete(e, budget.id)} 
-                    className="p-1 text-slate-400 hover:text-red-500 transition-colors bg-white/5 rounded"
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Excluir Orçamento"
                   >
                     <Trash2 size={16} />
                   </button>
