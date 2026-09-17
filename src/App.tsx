@@ -15,6 +15,8 @@ import SettingsProfile from './pages/SettingsProfile';
 import MaterialListEditor from './pages/MaterialListEditor';
 import QdcPanelsList from './pages/QdcPanelsList';
 import QdcEditor from './pages/QdcEditor';
+import ProposalsList from './pages/ProposalsList';
+import ProposalEditor from './pages/ProposalEditor';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -42,6 +44,9 @@ const AppRoutes = () => {
         <Route path="qdc" element={<QdcPanelsList />} />
         <Route path="qdc/novo" element={<QdcEditor />} />
         <Route path="qdc/:id" element={<QdcEditor />} />
+        <Route path="propostas" element={<ProposalsList />} />
+        <Route path="proposta/nova" element={<ProposalEditor />} />
+        <Route path="proposta/:id" element={<ProposalEditor />} />
         <Route path="clientes" element={<ClientsList />} />
         <Route path="perfil" element={<SettingsProfile />} />
       </Route>

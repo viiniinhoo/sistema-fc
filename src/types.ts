@@ -40,3 +40,34 @@ export interface QdcPanelData {
   created_by?: string;
 }
 
+
+export interface ProposalService {
+  id: string;
+  description: string;
+  positionOrder: number;
+}
+
+export interface InvestmentItem {
+  id: string;
+  category: string;
+  description: string;
+  amount: number;
+  positionOrder?: number;
+}
+
+export interface CommercialProposalData {
+  id?: string;
+  name: string;
+  clientId?: string;
+  clientName?: string;
+  workAddress?: string;
+  executionDays?: string;
+  validityDays?: string;
+  paymentTerms?: string;
+  materialObservations?: string;
+  observations?: string;
+  services: ProposalService[];
+  investments?: InvestmentItem[];
+  created_at?: string;
+  created_by?: string;
+}

@@ -215,53 +215,12 @@ export default function QdcEditor() {
   const { user } = useAuth();
 
   const [panel, setPanel] = useState<QdcPanelData>({
-    name: 'Quadro Principal de Distribuição (QDC)',
+    name: '',
     clientId: '',
     clientName: '',
     workAddress: '',
     observations: '',
-    circuits: [
-      {
-        id: uuidv4(),
-        identification: '01',
-        cableSize: '10,00mm²',
-        description: 'Chuveiro Elétrico Principal',
-        breakerRating: '50A - bipolar',
-        positionOrder: 1
-      },
-      {
-        id: uuidv4(),
-        identification: '02',
-        cableSize: '4,00mm²',
-        description: 'Torneira Elétrica / Cozinha',
-        breakerRating: '32A - bipolar',
-        positionOrder: 2
-      },
-      {
-        id: uuidv4(),
-        identification: '03',
-        cableSize: '2,50mm²',
-        description: 'Ar Condicionado Quarto',
-        breakerRating: '25A - bipolar',
-        positionOrder: 3
-      },
-      {
-        id: uuidv4(),
-        identification: '04',
-        cableSize: '2,50mm²',
-        description: 'Tomadas 110V Banheiro / Quarto',
-        breakerRating: '25A - unipolar',
-        positionOrder: 4
-      },
-      {
-        id: uuidv4(),
-        identification: '05',
-        cableSize: '1,50mm²',
-        description: 'Iluminação Geral / Fotocélula',
-        breakerRating: '16A - unipolar',
-        positionOrder: 5
-      }
-    ]
+    circuits: []
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -583,24 +542,30 @@ export default function QdcEditor() {
           </div>
 
           {/* Framer Motion Reorder Group */}
-          <Reorder.Group
-            axis="y"
-            values={panel.circuits}
-            onReorder={handleReorder}
-            className="space-y-2.5"
-          >
-            {panel.circuits.map((circuit, idx) => (
-              <QdcCircuitItem
-                key={circuit.id}
-                circuit={circuit}
-                idx={idx}
-                totalCircuits={panel.circuits.length}
-                moveCircuit={moveCircuit}
-                removeCircuit={removeCircuit}
-                updateCircuit={updateCircuit}
-              />
-            ))}
-          </Reorder.Group>
+          {panel.circuits.length === 0 ? (
+            <div className="text-center py-6 border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl p-4 bg-slate-100/50 dark:bg-slate-900/40 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+              Nenhum circuito cadastrado ainda. Clique no botão abaixo para adicionar o primeiro circuito.
+            </div>
+          ) : (
+            <Reorder.Group
+              axis="y"
+              values={panel.circuits}
+              onReorder={handleReorder}
+              className="space-y-2.5"
+            >
+              {panel.circuits.map((circuit, idx) => (
+                <QdcCircuitItem
+                  key={circuit.id}
+                  circuit={circuit}
+                  idx={idx}
+                  totalCircuits={panel.circuits.length}
+                  moveCircuit={moveCircuit}
+                  removeCircuit={removeCircuit}
+                  updateCircuit={updateCircuit}
+                />
+              ))}
+            </Reorder.Group>
+          )}
 
           {/* Add Circuit Button */}
           <button
