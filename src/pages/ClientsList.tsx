@@ -13,7 +13,7 @@ export default function ClientsList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentClient, setCurrentClient] = useState<any>({ name: '', phone: '', address: '', email: '' });
-  const [clientHistory, setClientHistory] = useState({ budgets: 0, lists: 0, qdcs: 0 });
+  const [clientHistory, setClientHistory] = useState({ budgets: 0, lists: 0, qdcs: 0, proposals: 0 });
 
   useEffect(() => {
     fetchClients();
@@ -82,17 +82,19 @@ export default function ClientsList() {
   const handleEditClient = async (client: any) => {
     setCurrentClient(client);
     setIsModalOpen(true);
-    setClientHistory({ budgets: 0, lists: 0, qdcs: 0 });
+    setClientHistory({ budgets: 0, lists: 0, qdcs: 0, proposals: 0 });
     try {
-      const [b, l, q] = await Promise.all([
+      const [b, l, q, p] = await Promise.all([
         supabase.from('budgets').select('id', { count: 'exact', head: true }).eq('client_id', client.id),
         supabase.from('material_lists').select('id', { count: 'exact', head: true }).eq('client_id', client.id),
-        supabase.from('qdc_panels').select('id', { count: 'exact', head: true }).eq('client_id', client.id)
+        supabase.from('qdc_panels').select('id', { count: 'exact', head: true }).eq('client_id', client.id),
+        supabase.from('commercial_proposals').select('id', { count: 'exact', head: true }).eq('client_id', client.id)
       ]);
       setClientHistory({
         budgets: b.count || 0,
         lists: l.count || 0,
-        qdcs: q.count || 0
+        qdcs: q.count || 0,
+        proposals: p.count || 0
       });
     } catch {}
   };
@@ -250,6 +252,14 @@ export default function ClientsList() {
                   >
                     <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Quadros QDC</p>
                     <p className="text-lg font-black text-amber-500">{clientHistory.qdcs}</p>
+                  </div>
+                  <div className="w-[1px] h-8 bg-slate-900/10 dark:bg-white/10" />
+                  <div 
+                    onClick={() => navigate(`/propostas?search=${encodeURIComponent(currentClient.name)}`)}
+                    className="text-center cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors flex-1"
+                  >
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">Propostas</p>
+                    <p className="text-lg font-black text-[#009ee3]">{clientHistory.proposals}</p>
                   </div>
                 </div>
               )}

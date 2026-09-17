@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { CommercialProposalData } from '../types';
 import { listProposals, deleteProposal } from '../services/proposalService';
 import { generateProposalPDF } from '../utils/proposalPdfGenerator';
@@ -16,9 +16,11 @@ import {
 
 export default function ProposalsList() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
   const [proposals, setProposals] = useState<CommercialProposalData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   useEffect(() => {
